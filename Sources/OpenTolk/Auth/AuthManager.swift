@@ -191,6 +191,10 @@ final class AuthManager: ObservableObject {
         }
 
         if httpResponse.statusCode != 200 {
+            // If the token in Keychain changed, another refresh already succeeded — use those tokens.
+            if let currentRefresh = AuthTokenStore.refreshToken, currentRefresh != refreshToken {
+                return
+            }
             await signOutLocally()
             throw AuthError.serverError("Session expired. Please sign in again.")
         }

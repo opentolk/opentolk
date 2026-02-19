@@ -3,10 +3,10 @@ import CoreGraphics
 
 final class PasteManager {
     static func paste(_ text: String) {
-        // Save to clipboard
+        // Save to clipboard with trailing space so cursor is ready for next input
         let pasteboard = NSPasteboard.general
         pasteboard.clearContents()
-        pasteboard.setString(text, forType: .string)
+        pasteboard.setString(text + " ", forType: .string)
 
         // Brief delay to let pasteboard settle
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.05) {
