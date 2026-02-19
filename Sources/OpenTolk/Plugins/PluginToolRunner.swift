@@ -218,6 +218,11 @@ enum PluginToolRunner {
                let argsString = String(data: argsJSON, encoding: .utf8) {
                 env["OPENTOLK_TOOL_ARGS"] = argsString
             }
+            // Pass plugin settings as environment variables
+            let settings = PluginManager.shared.resolvedSettings(for: plugin)
+            for (key, value) in settings {
+                env["OPENTOLK_SETTINGS_\(key.uppercased())"] = value
+            }
             process.environment = env
 
             let timeoutItem = DispatchWorkItem {
