@@ -116,6 +116,7 @@ final class ConversationPanelViewModel: ObservableObject {
 
 struct ConversationPanelView: View {
     @ObservedObject var viewModel: ConversationPanelViewModel
+    @FocusState private var isInputFocused: Bool
 
     var body: some View {
         VStack(spacing: 0) {
@@ -166,6 +167,7 @@ struct ConversationPanelView: View {
             HStack(spacing: 8) {
                 TextField("Type a follow-up...", text: $viewModel.inputText)
                     .textFieldStyle(.roundedBorder)
+                    .focused($isInputFocused)
                     .onSubmit { viewModel.sendFollowUp() }
                     .disabled(viewModel.isStreaming)
 
@@ -179,6 +181,11 @@ struct ConversationPanelView: View {
             .padding()
         }
         .frame(minWidth: 380, minHeight: 400)
+        .onAppear {
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+                isInputFocused = true
+            }
+        }
     }
 
     private func clearConversation() {

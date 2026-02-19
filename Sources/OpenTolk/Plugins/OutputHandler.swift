@@ -147,6 +147,7 @@ enum OutputHandler {
         panel.isFloatingPanel = true
         panel.level = .floating
         panel.center()
+        NSApp.activate(ignoringOtherApps: true)
         panel.makeKeyAndOrderFront(nil)
 
         panelWindows.append(panel)

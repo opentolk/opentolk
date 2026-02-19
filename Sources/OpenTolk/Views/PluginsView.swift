@@ -214,7 +214,7 @@ private struct PluginRow: View {
 
             Spacer()
 
-            if plugin.manifest.settings != nil, !(plugin.manifest.settings!.isEmpty) {
+            if hasConfigurableContent {
                 Button(action: onConfigure) {
                     Image(systemName: "gear")
                 }
@@ -238,6 +238,12 @@ private struct PluginRow: View {
         }
         .padding(.vertical, 4)
         .onAppear { isEnabled = plugin.isEnabled }
+    }
+
+    private var hasConfigurableContent: Bool {
+        let hasSettings = plugin.manifest.settings != nil && !(plugin.manifest.settings!.isEmpty)
+        let hasGmail = plugin.manifest.permissions?.contains(.gmail) == true
+        return hasSettings || hasGmail
     }
 
     private var pluginIcon: String {
@@ -364,8 +370,70 @@ private struct PluginUpdatesView: View {
 struct PluginsTab: View {
     var body: some View {
         VStack(spacing: 0) {
+            PluginAIConfigSection()
+            Divider()
             PluginsView()
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
+    }
+}
+
+// MARK: - Plugin AI Configuration
+
+private struct PluginAIConfigSection: View {
+    @State private var selectedProvider: String = Config.shared.aiProvider
+    @State private var apiKey: String = ""
+    @State private var showKey = false
+    @State private var saved = false
+
+    var body: some View {
+        HStack(spacing: 8) {
+            Picker("", selection: $selectedProvider) {
+                Text("OpenAI").tag("openai")
+                Text("Claude").tag("anthropic")
+            }
+            .pickerStyle(.segmented)
+            .labelsHidden()
+            .frame(width: 160)
+            .onChange(of: selectedProvider) { _, newValue in
+                Config.shared.aiProvider = newValue
+                loadKey()
+            }
+
+            if showKey {
+                TextField(keyPlaceholder, text: $apiKey)
+                    .textFieldStyle(.roundedBorder)
+                    .font(.system(.caption, design: .monospaced))
+            } else {
+                SecureField(keyPlaceholder, text: $apiKey)
+                    .textFieldStyle(.roundedBorder)
+            }
+
+            Button {
+                showKey.toggle()
+            } label: {
+                Image(systemName: showKey ? "eye.slash" : "eye")
+            }
+            .buttonStyle(.borderless)
+
+            Button(saved ? "Saved!" : "Save") {
+                Config.shared.aiAPIKey = apiKey.isEmpty ? nil : apiKey
+                saved = true
+                DispatchQueue.main.asyncAfter(deadline: .now() + 2) { saved = false }
+            }
+            .controlSize(.small)
+            .foregroundColor(saved ? .green : nil)
+        }
+        .padding(.horizontal, 12)
+        .padding(.vertical, 6)
+        .onAppear { loadKey() }
+    }
+
+    private var keyPlaceholder: String {
+        selectedProvider == "anthropic" ? "sk-ant-..." : "sk-..."
+    }
+
+    private func loadKey() {
+        apiKey = Config.shared.aiAPIKey ?? ""
     }
 }

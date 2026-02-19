@@ -27,6 +27,11 @@ struct PluginSettingsSheet: View {
             // Settings form
             ScrollView {
                 VStack(alignment: .leading, spacing: 16) {
+                    if plugin.manifest.permissions?.contains(.gmail) == true {
+                        GmailConnectSection()
+                        Divider()
+                    }
+
                     if let settings = plugin.manifest.settings {
                         ForEach(settings, id: \.key) { setting in
                             settingField(for: setting)

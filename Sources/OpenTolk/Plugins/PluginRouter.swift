@@ -76,7 +76,7 @@ enum PluginRouter {
     // MARK: - Keyword Matching
 
     private static func matchKeyword(_ config: KeywordTrigger, trigger: TriggerConfig, against text: String, plugin: LoadedPlugin) -> PluginMatch? {
-        let lowerText = text.lowercased()
+        let lowerText = text.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
         let position = config.position ?? .start
 
         let sortedKeywords = config.keywords.sorted { $0.count > $1.count }
@@ -89,11 +89,11 @@ enum PluginRouter {
             case .start:
                 matched = lowerText.hasPrefix(lowerKeyword) &&
                     (lowerText.count == lowerKeyword.count ||
-                     lowerText[lowerText.index(lowerText.startIndex, offsetBy: lowerKeyword.count)] == " ")
+                     !lowerText[lowerText.index(lowerText.startIndex, offsetBy: lowerKeyword.count)].isLetter)
             case .end:
                 matched = lowerText.hasSuffix(lowerKeyword) &&
                     (lowerText.count == lowerKeyword.count ||
-                     lowerText[lowerText.index(lowerText.endIndex, offsetBy: -(lowerKeyword.count + 1))] == " ")
+                     !lowerText[lowerText.index(lowerText.endIndex, offsetBy: -(lowerKeyword.count + 1))].isLetter)
             case .anywhere:
                 matched = lowerText.contains(lowerKeyword)
             }

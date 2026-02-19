@@ -42,6 +42,7 @@ enum PluginPermission: String, Codable {
     case notifications
     case ai
     case microphone
+    case gmail
 }
 
 // MARK: - Trigger Config (Discriminated Union)

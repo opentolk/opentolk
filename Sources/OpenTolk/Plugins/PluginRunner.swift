@@ -264,6 +264,49 @@ enum PluginRunner {
                     "required": ["input"]
                 ]
             ),
+            "gmail_check": (
+                description: "List recent emails from the user's Gmail inbox. Returns subjects, senders, dates, and message IDs.",
+                parameters: [
+                    "type": "object",
+                    "properties": [
+                        "query": ["type": "string", "description": "Gmail search query (e.g. 'is:unread', 'from:sarah', 'subject:meeting'). Leave empty for recent emails."],
+                        "max_results": ["type": "number", "description": "Maximum number of emails to return (default 10)"]
+                    ] as [String: Any]
+                ]
+            ),
+            "gmail_read": (
+                description: "Read the full content of a specific email by its message ID.",
+                parameters: [
+                    "type": "object",
+                    "properties": [
+                        "message_id": ["type": "string", "description": "The Gmail message ID to read"]
+                    ],
+                    "required": ["message_id"]
+                ]
+            ),
+            "gmail_reply": (
+                description: "Reply to an existing email. The reply is sent in the same thread.",
+                parameters: [
+                    "type": "object",
+                    "properties": [
+                        "message_id": ["type": "string", "description": "The Gmail message ID to reply to"],
+                        "body": ["type": "string", "description": "The reply message body text"]
+                    ],
+                    "required": ["message_id", "body"]
+                ]
+            ),
+            "gmail_send": (
+                description: "Send a new email to a recipient.",
+                parameters: [
+                    "type": "object",
+                    "properties": [
+                        "to": ["type": "string", "description": "Recipient email address"],
+                        "subject": ["type": "string", "description": "Email subject line"],
+                        "body": ["type": "string", "description": "Email body text"]
+                    ],
+                    "required": ["to", "subject", "body"]
+                ]
+            ),
         ]
 
         return tools.map { tool -> AIToolDefinition in

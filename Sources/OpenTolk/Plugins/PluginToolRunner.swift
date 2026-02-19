@@ -50,8 +50,116 @@ enum PluginToolRunner {
             let result = try await runPlugin(pluginID: pluginID, input: input)
             return ToolResult(name: call.name, content: result)
 
+        case "gmail_check":
+            return try await runGmailCheck(call: call)
+
+        case "gmail_read":
+            return try await runGmailRead(call: call)
+
+        case "gmail_reply":
+            return try await runGmailReply(call: call)
+
+        case "gmail_send":
+            return try await runGmailSend(call: call)
+
         default:
             return ToolResult(name: call.name, content: "Unknown builtin tool: \(call.name)")
+        }
+    }
+
+    // MARK: - Gmail Tools
+
+    private static func runGmailCheck(call: ToolCall) async throws -> ToolResult {
+        guard await GmailAuthManager.shared.isConnected else {
+            return ToolResult(name: call.name, content: "Error: Gmail is not connected. Please connect Gmail in plugin settings first.")
+        }
+
+        let query = call.arguments["query"] as? String
+        let maxResults = call.arguments["max_results"] as? Int ?? 10
+
+        do {
+            let messages = try await GmailAPIClient.listMessages(query: query, maxResults: maxResults)
+            if messages.isEmpty {
+                return ToolResult(name: call.name, content: "No emails found.")
+            }
+
+            var result = "Found \(messages.count) email(s):\n\n"
+            for (i, msg) in messages.enumerated() {
+                let unreadTag = msg.isUnread ? " [UNREAD]" : ""
+                result += "\(i + 1). **\(msg.subject)**\(unreadTag)\n"
+                result += "   From: \(msg.from)\n"
+                result += "   Date: \(msg.date)\n"
+                result += "   Preview: \(msg.snippet)\n"
+                result += "   ID: \(msg.id)\n\n"
+            }
+            return ToolResult(name: call.name, content: result)
+        } catch {
+            return ToolResult(name: call.name, content: "Error checking email: \(error.localizedDescription)")
+        }
+    }
+
+    private static func runGmailRead(call: ToolCall) async throws -> ToolResult {
+        guard await GmailAuthManager.shared.isConnected else {
+            return ToolResult(name: call.name, content: "Error: Gmail is not connected. Please connect Gmail in plugin settings first.")
+        }
+
+        guard let messageId = call.arguments["message_id"] as? String, !messageId.isEmpty else {
+            return ToolResult(name: call.name, content: "Error: message_id is required.")
+        }
+
+        do {
+            let message = try await GmailAPIClient.getMessage(id: messageId)
+            var result = "**\(message.subject)**\n"
+            result += "From: \(message.from)\n"
+            result += "To: \(message.to)\n"
+            result += "Date: \(message.date)\n\n"
+            result += message.body
+            return ToolResult(name: call.name, content: result)
+        } catch {
+            return ToolResult(name: call.name, content: "Error reading email: \(error.localizedDescription)")
+        }
+    }
+
+    private static func runGmailReply(call: ToolCall) async throws -> ToolResult {
+        guard await GmailAuthManager.shared.isConnected else {
+            return ToolResult(name: call.name, content: "Error: Gmail is not connected. Please connect Gmail in plugin settings first.")
+        }
+
+        guard let messageId = call.arguments["message_id"] as? String, !messageId.isEmpty else {
+            return ToolResult(name: call.name, content: "Error: message_id is required.")
+        }
+        guard let body = call.arguments["body"] as? String, !body.isEmpty else {
+            return ToolResult(name: call.name, content: "Error: body is required.")
+        }
+
+        do {
+            let sentId = try await GmailAPIClient.replyToMessage(messageId: messageId, body: body)
+            return ToolResult(name: call.name, content: "Reply sent successfully (ID: \(sentId)).")
+        } catch {
+            return ToolResult(name: call.name, content: "Error sending reply: \(error.localizedDescription)")
+        }
+    }
+
+    private static func runGmailSend(call: ToolCall) async throws -> ToolResult {
+        guard await GmailAuthManager.shared.isConnected else {
+            return ToolResult(name: call.name, content: "Error: Gmail is not connected. Please connect Gmail in plugin settings first.")
+        }
+
+        guard let to = call.arguments["to"] as? String, !to.isEmpty else {
+            return ToolResult(name: call.name, content: "Error: to is required.")
+        }
+        guard let subject = call.arguments["subject"] as? String, !subject.isEmpty else {
+            return ToolResult(name: call.name, content: "Error: subject is required.")
+        }
+        guard let body = call.arguments["body"] as? String, !body.isEmpty else {
+            return ToolResult(name: call.name, content: "Error: body is required.")
+        }
+
+        do {
+            let sentId = try await GmailAPIClient.sendMessage(to: to, subject: subject, body: body)
+            return ToolResult(name: call.name, content: "Email sent successfully to \(to) (ID: \(sentId)).")
+        } catch {
+            return ToolResult(name: call.name, content: "Error sending email: \(error.localizedDescription)")
         }
     }
 

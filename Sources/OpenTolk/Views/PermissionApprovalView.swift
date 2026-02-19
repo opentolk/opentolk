@@ -72,6 +72,7 @@ struct PermissionApprovalView: View {
         case .notifications: return "bell"
         case .ai: return "brain"
         case .microphone: return "mic"
+        case .gmail: return "envelope"
         }
     }
 }

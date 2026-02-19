@@ -16,6 +16,7 @@ final class PluginPermissionManager {
         .notifications: "Send system notifications",
         .ai: "Use AI models to process your text",
         .microphone: "Access the microphone",
+        .gmail: "Read and send emails through your connected Gmail account",
     ]
 
     // MARK: - Check Permissions
