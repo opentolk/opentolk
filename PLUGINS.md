@@ -345,7 +345,7 @@ AI plugins can use tools — functions the AI can call during its response.
 }
 ```
 
-Script tools receive arguments as JSON on stdin and environment variable `OPENTOLK_TOOL_ARGS`. They return the result on stdout.
+Script tools receive arguments as JSON on stdin and environment variable `OPENTOLK_TOOL_ARGS`. Plugin settings are available as `OPENTOLK_SETTINGS_*` environment variables (e.g., a setting with key `api_key` becomes `OPENTOLK_SETTINGS_API_KEY`). They return the result on stdout.
 
 ---
 
@@ -964,6 +964,16 @@ OpenTolk watches `~/.opentolk/plugins/` for changes. When you add, edit, or remo
 2. **URL scheme:** `opentolk://install-plugin?url=https://example.com/plugin.zip`
 3. **Browse tab:** Search and install from the community plugins directory
 4. **GitHub:** The installer resolves GitHub repo URLs to their latest release automatically
+
+## Publishing to the Browse Tab
+
+To make your plugin discoverable in the Browse tab, it must be listed in the [community-plugins](https://github.com/opentolk/community-plugins) repository:
+
+1. Add your `.tolkplugin` file (or `.tolkplugin.zip` for directory plugins) to the `plugins/` folder
+2. Add an entry to `plugins.json` with your plugin's metadata (id, name, version, description, author, categories, download URL)
+3. Submit a pull request
+
+See [`CONTRIBUTING.md`](https://github.com/opentolk/community-plugins/blob/main/CONTRIBUTING.md) in the community-plugins repo for the full process and `plugins.json` format.
 
 ---
 
