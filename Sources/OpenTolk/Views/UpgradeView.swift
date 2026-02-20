@@ -2,6 +2,7 @@ import SwiftUI
 
 struct UpgradeView: View {
     var onDismiss: () -> Void
+    @State private var selectedPlan = "annual"
 
     var body: some View {
         VStack(spacing: 20) {
@@ -47,16 +48,28 @@ struct UpgradeView: View {
             .clipShape(RoundedRectangle(cornerRadius: 8))
 
             // Pricing
-            HStack(spacing: 12) {
-                pricingCard(title: "Monthly", price: "$4.99", period: "/month", isPopular: false)
-                pricingCard(title: "Annual", price: "$39.99", period: "/year", isPopular: true)
-                pricingCard(title: "Lifetime", price: "$79.99", period: "once", isPopular: false)
+            VStack(spacing: 6) {
+                Text("Most Popular")
+                    .font(.caption2)
+                    .fontWeight(.bold)
+                    .foregroundStyle(.white)
+                    .padding(.horizontal, 8)
+                    .padding(.vertical, 2)
+                    .background(.blue)
+                    .clipShape(Capsule())
+                    .opacity(selectedPlan == "annual" ? 1 : 0)
+
+                HStack(spacing: 12) {
+                    pricingCard(plan: "monthly", title: "Monthly", price: "$4.99", period: "/month")
+                    pricingCard(plan: "annual", title: "Annual", price: "$39.99", period: "/year")
+                    pricingCard(plan: "lifetime", title: "Lifetime", price: "$79.99", period: "once")
+                }
             }
 
             // CTA
             Button {
                 if AuthManager.shared.isSignedIn {
-                    SubscriptionManager.shared.openCheckout()
+                    SubscriptionManager.shared.openCheckout(plan: selectedPlan)
                 } else {
                     // Require sign-in before checkout
                     NSWorkspace.shared.open(URL(string: "opentolk://auth")!)
@@ -124,21 +137,12 @@ struct UpgradeView: View {
         .padding(.vertical, 6)
     }
 
-    private func pricingCard(title: String, price: String, period: String, isPopular: Bool) -> some View {
-        VStack(spacing: 4) {
-            if isPopular {
-                Text("Best Value")
-                    .font(.caption2)
-                    .fontWeight(.bold)
-                    .foregroundStyle(.white)
-                    .padding(.horizontal, 8)
-                    .padding(.vertical, 2)
-                    .background(.blue)
-                    .clipShape(Capsule())
-            }
+    private func pricingCard(plan: String, title: String, price: String, period: String) -> some View {
+        let isSelected = selectedPlan == plan
+        return VStack(spacing: 4) {
             Text(title)
                 .font(.caption)
-                .foregroundStyle(.secondary)
+                .foregroundStyle(isSelected ? .primary : .secondary)
             Text(price)
                 .font(.title3)
                 .fontWeight(.bold)
@@ -148,11 +152,56 @@ struct UpgradeView: View {
         }
         .padding(12)
         .frame(maxWidth: .infinity)
-        .background(isPopular ? Color.blue.opacity(0.08) : Color.clear)
-        .clipShape(RoundedRectangle(cornerRadius: 8))
+        .background(.ultraThinMaterial)
+        .clipShape(RoundedRectangle(cornerRadius: 10))
         .overlay(
-            RoundedRectangle(cornerRadius: 8)
-                .stroke(isPopular ? Color.blue : Color.clear, lineWidth: 1.5)
+            RoundedRectangle(cornerRadius: 10)
+                .stroke(isSelected ? Color.blue : Color.white.opacity(0.1), lineWidth: isSelected ? 2 : 1)
         )
+        .shadow(color: isSelected ? .blue.opacity(0.2) : .clear, radius: 6)
+        .contentShape(Rectangle())
+        .onTapGesture {
+            withAnimation(.easeInOut(duration: 0.15)) {
+                selectedPlan = plan
+            }
+        }
+    }
+}
+
+struct UpgradeSuccessView: View {
+    var onDismiss: () -> Void
+
+    var body: some View {
+        VStack(spacing: 20) {
+            Spacer()
+
+            Image(systemName: "checkmark.seal.fill")
+                .font(.system(size: 56))
+                .foregroundStyle(.green)
+
+            Text("Welcome to Pro!")
+                .font(.title2)
+                .fontWeight(.bold)
+
+            Text("Thank you for upgrading. You now have\nunlimited dictation, longer recordings,\nand access to all languages.")
+                .multilineTextAlignment(.center)
+                .foregroundStyle(.secondary)
+                .font(.callout)
+
+            Spacer()
+
+            Button {
+                onDismiss()
+            } label: {
+                Text("Start Dictating")
+                    .frame(maxWidth: .infinity)
+            }
+            .buttonStyle(.borderedProminent)
+            .controlSize(.large)
+        }
+        .padding(24)
+        .frame(width: 420, height: 320)
+        .background(.ultraThinMaterial)
+        .clipShape(RoundedRectangle(cornerRadius: 12))
     }
 }

@@ -507,6 +507,17 @@ final class StatusBarController: NSObject, NSApplicationDelegate, NSWindowDelega
         if url.host == "subscription-activated" {
             SubscriptionManager.shared.handleSubscriptionActivated()
             popoverViewModel.refresh()
+            // Replace upgrade window with success view
+            if let window = upgradeWindow {
+                let successView = UpgradeSuccessView {
+                    self.upgradeWindow?.close()
+                    self.upgradeWindow = nil
+                }
+                window.contentViewController = NSHostingController(rootView: successView)
+                window.title = "Welcome to Pro"
+                window.makeKeyAndOrderFront(nil)
+                NSApp.activate(ignoringOtherApps: true)
+            }
             return
         }
         popoverViewModel.refresh()

@@ -70,21 +70,23 @@ final class SubscriptionManager: ObservableObject {
     }
 
     func openCheckout(plan: String = "annual") {
-        guard AuthManager.shared.isSignedIn,
-              let token = AuthTokenStore.accessToken,
-              let url = URL(string: "\(Self.baseURL)/checkout?plan=\(plan)&token=\(token)")
-        else { return }
-        NSWorkspace.shared.open(url)
+        guard AuthManager.shared.isSignedIn else { return }
+        Task {
+            do {
+                let token = try await AuthManager.shared.ensureFreshToken()
+                guard let url = URL(string: "\(Self.baseURL)/checkout?plan=\(plan)&token=\(token)") else { return }
+                await MainActor.run {
+                    NSWorkspace.shared.open(url)
+                }
+            } catch {
+                print("Failed to refresh token for checkout: \(error.localizedDescription)")
+            }
+        }
     }
 
     func handleSubscriptionActivated() {
         Task {
             await refreshStatus()
-            await MainActor.run {
-                if isPro {
-                    showNotification(success: true)
-                }
-            }
         }
     }
 

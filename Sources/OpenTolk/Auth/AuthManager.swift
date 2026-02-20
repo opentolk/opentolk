@@ -150,6 +150,16 @@ final class AuthManager: ObservableObject {
 
     // MARK: - Token Refresh
 
+    /// Ensure the access token is fresh, refreshing if needed. Returns the valid token.
+    func ensureFreshToken() async throws -> String {
+        // Make a lightweight check — try to refresh proactively
+        try await refreshAccessToken()
+        guard let token = AuthTokenStore.accessToken else {
+            throw AuthError.noRefreshToken
+        }
+        return token
+    }
+
     private func refreshAccessToken() async throws {
         guard let refreshToken = AuthTokenStore.refreshToken else {
             await signOutLocally()
