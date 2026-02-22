@@ -345,10 +345,24 @@ final class StatusBarController: NSObject, NSApplicationDelegate, NSWindowDelega
 
         // Check usage limit only for cloud free tier
         if provider == .cloud && !SubscriptionManager.shared.isPro && UsageTracker.shared.wordsRemaining() <= 0 {
-            DispatchQueue.main.async { self.showUpgrade() }
+            // Re-check subscription status before blocking — it may not have loaded yet
+            Task {
+                await SubscriptionManager.shared.refreshStatus()
+                await MainActor.run {
+                    if SubscriptionManager.shared.isPro {
+                        self.beginTapRecording()
+                    } else {
+                        self.showUpgrade()
+                    }
+                }
+            }
             return
         }
 
+        beginTapRecording()
+    }
+
+    private func beginTapRecording() {
         state = .recording
         updateIcon()
         SoundFeedback.playRecordingStart()
@@ -373,10 +387,23 @@ final class StatusBarController: NSObject, NSApplicationDelegate, NSWindowDelega
 
         // Check usage limit only for cloud free tier
         if provider == .cloud && !SubscriptionManager.shared.isPro && UsageTracker.shared.wordsRemaining() <= 0 {
-            DispatchQueue.main.async { self.showUpgrade() }
+            Task {
+                await SubscriptionManager.shared.refreshStatus()
+                await MainActor.run {
+                    if SubscriptionManager.shared.isPro {
+                        self.beginHoldRecording()
+                    } else {
+                        self.showUpgrade()
+                    }
+                }
+            }
             return
         }
 
+        beginHoldRecording()
+    }
+
+    private func beginHoldRecording() {
         state = .recording
         updateIcon()
         SoundFeedback.playRecordingStart()
