@@ -1,12 +1,14 @@
 import Foundation
-import IOKit
 
 final class CloudTranscriber: TranscriptionProvider {
     let providerType: TranscriptionProviderType = .cloud
     private static let baseURL = Config.apiBaseURL
-    private let session = URLSession.shared
 
     func transcribe(audio: RecordedAudio) async throws -> TranscriptionResult {
+        guard AuthManager.shared.isSignedIn else {
+            throw TranscriptionError.signInRequired
+        }
+
         let url = URL(string: "\(Self.baseURL)/transcribe")!
         var request = URLRequest(url: url)
         request.httpMethod = "POST"
@@ -14,15 +16,10 @@ final class CloudTranscriber: TranscriptionProvider {
         let boundary = UUID().uuidString
         request.setValue("multipart/form-data; boundary=\(boundary)", forHTTPHeaderField: "Content-Type")
 
-        var fields: [(name: String, value: String)] = [
+        let fields: [(name: String, value: String)] = [
             ("model", Config.shared.groqModel),
             ("language", Config.shared.effectiveLanguage),
         ]
-
-        // If not signed in, include machine_id for usage tracking
-        if !AuthManager.shared.isSignedIn {
-            fields.append(("machine_id", Self.machineId))
-        }
 
         let body = Data.buildMultipartBody(
             boundary: boundary,
@@ -33,19 +30,7 @@ final class CloudTranscriber: TranscriptionProvider {
         )
         request.httpBody = body
 
-        let data: Data
-        let response: HTTPURLResponse
-
-        if AuthManager.shared.isSignedIn {
-            (data, response) = try await AuthManager.shared.authenticatedRequest(request)
-        } else {
-            let (respData, urlResponse) = try await session.data(for: request)
-            guard let httpResp = urlResponse as? HTTPURLResponse else {
-                throw TranscriptionError.invalidResponse
-            }
-            data = respData
-            response = httpResp
-        }
+        let (data, response) = try await AuthManager.shared.authenticatedRequest(request)
 
         guard let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any] else {
             throw TranscriptionError.noData
@@ -72,22 +57,4 @@ final class CloudTranscriber: TranscriptionProvider {
         )
     }
 
-    /// Stable machine identifier from IOKit hardware UUID.
-    private static let machineId: String = {
-        let service = IOServiceGetMatchingService(kIOMasterPortDefault,
-                                                   IOServiceMatching("IOPlatformExpertDevice"))
-        defer { IOObjectRelease(service) }
-        if let uuid = IORegistryEntryCreateCFProperty(service,
-                                                       "IOPlatformUUID" as CFString,
-                                                       kCFAllocatorDefault, 0)?
-            .takeRetainedValue() as? String {
-            return uuid
-        }
-        // Fallback: persisted random UUID
-        let key = "opentolk_machine_id"
-        if let existing = UserDefaults.standard.string(forKey: key) { return existing }
-        let newId = UUID().uuidString
-        UserDefaults.standard.set(newId, forKey: key)
-        return newId
-    }()
 }
