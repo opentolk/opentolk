@@ -55,6 +55,9 @@ final class StatusBarController: NSObject, NSApplicationDelegate, NSWindowDelega
 
         transcriber = TranscriberFactory.makeProvider()
 
+        // Preload local model in background so it's ready when needed
+        LocalModelManager.shared.preloadIfNeeded()
+
         // Observe provider changes from Settings
         providerObserver = NotificationCenter.default.addObserver(
             forName: .transcriptionProviderChanged,
@@ -63,6 +66,7 @@ final class StatusBarController: NSObject, NSApplicationDelegate, NSWindowDelega
         ) { [weak self] _ in
             self?.transcriber = TranscriberFactory.makeProvider()
             self?.popoverViewModel.refresh()
+            LocalModelManager.shared.preloadIfNeeded()
         }
 
         // Observe hotkey changes from Settings

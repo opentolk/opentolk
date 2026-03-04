@@ -6,13 +6,7 @@ struct HistoryView: View {
     @State private var expandedIndex: Int? = nil
     @State private var copiedIndex: Int? = nil
 
-    private var maxEntries: Int {
-        let provider = Config.shared.selectedProvider
-        if provider.hasUnlimitedFeatures || SubscriptionManager.shared.isPro {
-            return 50
-        }
-        return 20 // Cloud free tier
-    }
+    private var maxEntries: Int { 50 }
 
     private var filteredEntries: [HistoryEntry] {
         let limited = Array(entries.prefix(maxEntries))
@@ -89,13 +83,13 @@ struct HistoryView: View {
                 }
             }
 
-            // Footer
-            if Config.shared.selectedProvider == .cloud && !SubscriptionManager.shared.isPro && entries.count > 20 {
+            // Footer (sync upsell for non-Pro)
+            if !SubscriptionManager.shared.isPro && !entries.isEmpty {
                 Divider()
                 HStack {
-                    Image(systemName: "info.circle")
-                        .foregroundStyle(.secondary)
-                    Text("Cloud free tier shows last 20 entries. Upgrade or use your own API key for 50.")
+                    Image(systemName: "arrow.triangle.2.circlepath")
+                        .foregroundStyle(.blue)
+                    Text("Upgrade to Pro to sync history across all your Macs.")
                         .font(.caption)
                         .foregroundStyle(.secondary)
                     Spacer()

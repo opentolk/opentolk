@@ -100,13 +100,13 @@ struct MainPopoverView: View {
                     onOpenSettings()
                 }
                 Spacer()
-                if viewModel.isCloudProvider && !viewModel.isPro {
+                if !viewModel.isPro {
                     Button {
                         viewModel.showUpgrade = true
                     } label: {
                         HStack(spacing: 4) {
-                            Image(systemName: "star.fill")
-                            Text("Upgrade")
+                            Image(systemName: "arrow.triangle.2.circlepath")
+                            Text("Pro")
                         }
                         .font(.caption)
                         .fontWeight(.medium)

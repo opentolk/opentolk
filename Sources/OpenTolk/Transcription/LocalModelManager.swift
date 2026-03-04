@@ -5,6 +5,7 @@ enum LocalModelState: Equatable {
     case notDownloaded
     case downloading(progress: Double)
     case compiling
+    case warming
     case ready
     case error(String)
 }
@@ -43,6 +44,8 @@ final class LocalModelManager {
         modelsDirectory.appendingPathComponent("models/argmaxinc/whisperkit-coreml/openai_whisper-\(modelName)")
     }
 
+    private var preloadTask: Task<Void, Never>?
+
     private init() {
         checkExistingModel()
     }
@@ -57,10 +60,41 @@ final class LocalModelManager {
         let modelName = Config.shared.localModel
         let modelDir = modelPath(for: modelName)
         if FileManager.default.fileExists(atPath: modelDir.path) {
-            // Model files exist but not compiled/loaded yet — auto-setup
-            setupModel()
+            modelState = .ready
         } else {
             modelState = .notDownloaded
+        }
+    }
+
+    /// Call on app launch — silently loads the pipeline in the background
+    /// so it's ready by the time the user wants to dictate.
+    func preloadIfNeeded() {
+        guard Config.shared.selectedProvider == .local else { return }
+        let modelName = Config.shared.localModel
+        guard whisperPipeline == nil || loadedModelName != modelName else { return }
+        let modelDir = modelPath(for: modelName)
+        guard FileManager.default.fileExists(atPath: modelDir.path) else { return }
+
+        preloadTask?.cancel()
+        preloadTask = Task {
+            await MainActor.run { modelState = .warming }
+            do {
+                let pipeline = try await WhisperKit(
+                    WhisperKitConfig(
+                        modelFolder: modelDir.path,
+                        verbose: false,
+                        load: true,
+                        download: false
+                    )
+                )
+                self.whisperPipeline = pipeline
+                self.loadedModelName = modelName
+                await MainActor.run { modelState = .ready }
+            } catch {
+                if Task.isCancelled { return }
+                // Preload failed silently — will retry on first transcription
+                await MainActor.run { modelState = .ready }
+            }
         }
     }
 

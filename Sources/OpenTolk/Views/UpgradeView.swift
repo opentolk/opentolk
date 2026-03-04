@@ -8,13 +8,13 @@ struct UpgradeView: View {
         VStack(spacing: 20) {
             // Header
             VStack(spacing: 8) {
-                Image(systemName: "star.fill")
+                Image(systemName: "arrow.triangle.2.circlepath")
                     .font(.system(size: 36))
-                    .foregroundStyle(.yellow)
+                    .foregroundStyle(.blue)
                 Text("Upgrade to Pro")
                     .font(.title2)
                     .fontWeight(.bold)
-                Text("Unlock the full power of OpenTolk Cloud")
+                Text("Sync everywhere. Unlimited cloud dictation.")
                     .foregroundStyle(.secondary)
             }
 
@@ -22,29 +22,31 @@ struct UpgradeView: View {
             VStack(spacing: 0) {
                 comparisonHeader
                 Divider()
-                comparisonRow("Words / month", free: "5,000", pro: "Unlimited")
+                comparisonRow("Cloud words", free: "5,000/mo", pro: "Unlimited")
                 Divider()
-                comparisonRow("Max recording", free: "30s", pro: "120s")
+                comparisonRow("Sync across Macs", free: "---", pro: "Snippets, history, settings")
                 Divider()
-                comparisonRow("Languages", free: "English", pro: "All Whisper-supported")
+                comparisonRow("Local transcription", free: "Unlimited", pro: "Unlimited")
                 Divider()
-                comparisonRow("History entries", free: "20", pro: "50")
+                comparisonRow("All languages", free: "Yes", pro: "Yes")
+                Divider()
+                comparisonRow("Recording length", free: "120s", pro: "120s")
             }
             .background(.quaternary.opacity(0.3))
             .clipShape(RoundedRectangle(cornerRadius: 10))
 
-            // Own-key note
+            // Sync highlight
             HStack(spacing: 6) {
-                Image(systemName: "key.fill")
-                    .foregroundStyle(.green)
+                Image(systemName: "arrow.triangle.2.circlepath")
+                    .foregroundStyle(.blue)
                     .font(.caption)
-                Text("Have your own API key? Use it for free forever with no limits.")
+                Text("Pro syncs your snippets, history, and settings across all your Macs.")
                     .font(.caption)
                     .foregroundStyle(.secondary)
             }
             .padding(.horizontal, 12)
             .padding(.vertical, 8)
-            .background(.green.opacity(0.08))
+            .background(.blue.opacity(0.08))
             .clipShape(RoundedRectangle(cornerRadius: 8))
 
             // Pricing
@@ -71,7 +73,6 @@ struct UpgradeView: View {
                 if AuthManager.shared.isSignedIn {
                     SubscriptionManager.shared.openCheckout(plan: selectedPlan)
                 } else {
-                    // Require sign-in before checkout
                     NSWorkspace.shared.open(URL(string: "opentolk://auth")!)
                 }
             } label: {
@@ -112,7 +113,7 @@ struct UpgradeView: View {
                 .font(.caption)
                 .fontWeight(.semibold)
                 .foregroundStyle(.blue)
-                .frame(width: 100)
+                .frame(width: 120)
         }
         .padding(.horizontal, 12)
         .padding(.vertical, 8)
@@ -131,7 +132,7 @@ struct UpgradeView: View {
                 .font(.caption)
                 .fontWeight(.medium)
                 .foregroundStyle(.blue)
-                .frame(width: 100)
+                .frame(width: 120)
         }
         .padding(.horizontal, 12)
         .padding(.vertical, 6)
@@ -183,7 +184,7 @@ struct UpgradeSuccessView: View {
                 .font(.title2)
                 .fontWeight(.bold)
 
-            Text("Thank you for upgrading. You now have\nunlimited dictation, longer recordings,\nand access to all languages.")
+            Text("Unlimited cloud dictation and sync\nacross all your Macs is now active.")
                 .multilineTextAlignment(.center)
                 .foregroundStyle(.secondary)
                 .font(.callout)

@@ -147,19 +147,13 @@ final class Config {
         NotificationCenter.default.post(name: .localDataChanged, object: nil)
     }
 
-    // MARK: - Tier-Aware Computed Properties
+    // MARK: - Computed Properties
 
     var effectiveMaxRecordingDuration: TimeInterval {
-        if selectedProvider.hasUnlimitedFeatures || SubscriptionManager.shared.isPro {
-            return maxRecordingDuration // User's setting, up to 120s
-        }
-        return min(maxRecordingDuration, 30.0) // Cloud free: capped at 30s
+        return maxRecordingDuration
     }
 
     var effectiveLanguage: String {
-        if selectedProvider.hasUnlimitedFeatures || SubscriptionManager.shared.isPro {
-            return language // User's setting, any Whisper language
-        }
-        return "en" // Cloud free: English only
+        return language
     }
 }

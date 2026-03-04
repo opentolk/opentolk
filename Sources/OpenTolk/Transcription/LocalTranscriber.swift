@@ -15,7 +15,8 @@ final class LocalTranscriber: TranscriptionProvider {
             throw TranscriptionError.modelNotReady("Model is compiling for your hardware. Please wait.")
         case .error(let message):
             throw TranscriptionError.modelNotReady(message)
-        case .ready:
+        case .warming, .ready:
+            // warming = preload in progress, ensurePipelineLoaded will wait for it
             break
         }
 

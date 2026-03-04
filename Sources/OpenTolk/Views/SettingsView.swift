@@ -112,10 +112,10 @@ private struct TranscriptionTab: View {
                     Text("No configuration needed. Works out of the box.")
                         .foregroundStyle(.secondary)
                         .font(.callout)
-                    Text("Free: 5,000 words/month, 30s recordings, English only")
+                    Text("Free: 5,000 words/month")
                         .font(.caption)
                         .foregroundStyle(.secondary)
-                    Text("Pro ($4.99/mo): Unlimited words, 120s recordings, all languages")
+                    Text("Pro: Unlimited words + sync across all your Macs")
                         .font(.caption)
                         .foregroundStyle(.blue)
                 }
@@ -324,13 +324,7 @@ private struct AudioTab: View {
     @State private var maxRecordingDuration: Double = 120.0
     @State private var language: String = "en"
 
-    private var hasUnlimitedFeatures: Bool {
-        Config.shared.selectedProvider.hasUnlimitedFeatures || SubscriptionManager.shared.isPro
-    }
-
-    private var effectiveMaxDuration: Double {
-        hasUnlimitedFeatures ? 120.0 : 30.0
-    }
+    private let effectiveMaxDuration: Double = 120.0
 
     var body: some View {
         Form {
@@ -375,27 +369,11 @@ private struct AudioTab: View {
                         .font(.system(.caption, design: .monospaced))
                         .frame(width: 50)
                 }
-                if !hasUnlimitedFeatures {
-                    Text("Cloud free tier limited to 30s. Upgrade to Pro or use your own API key for up to 120s.")
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
-                }
             }
 
             Section("Language") {
-                if hasUnlimitedFeatures {
-                    TextField("Language code (e.g., en, es, fr, de)", text: $language)
-                        .textFieldStyle(.roundedBorder)
-                } else {
-                    HStack {
-                        Text("English only")
-                            .foregroundStyle(.secondary)
-                        Spacer()
-                        Text("Upgrade or use own key for all languages")
-                            .font(.caption)
-                            .foregroundStyle(.blue)
-                    }
-                }
+                TextField("Language code (e.g., en, es, fr, de)", text: $language)
+                    .textFieldStyle(.roundedBorder)
             }
         }
         .formStyle(.grouped)
